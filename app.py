@@ -4,10 +4,10 @@ import re
 import pandas as pd
 from urllib.parse import urlparse
 
-# Saved AI Model load karna
 model = joblib.load("phishing_detector_model.pkl")
 
 def extract_url_features(url):
+    url = url.strip()
     features = {}
     features['url_length'] = len(url)
     features['has_https'] = 1 if url.startswith("https://") else 0
@@ -23,39 +23,38 @@ def extract_url_features(url):
 def explain_reason(feat):
     reasons = []
     if feat['has_https'] == 0:
-        reasons.append("⚠️ Website mein secure HTTPS lock nahi hai.")
+        reasons.append("⚠️ Missing secure HTTPS encryption lock.")
     if feat['hyphen_count'] >= 2:
-        reasons.append("⚠️ Domain name mein bohot saare hyphens ('-') hain (nakli websites ki pehchan).")
+        reasons.append("⚠️ Multiple hyphens ('-') detected in the domain name (common in fake websites).")
     if feat['suspicious_word_count'] >= 1:
-        reasons.append("⚠️ Link mein darane ya lalach dene wale shabd (jaise kyc, urgent, bank, free) hain.")
+        reasons.append("⚠️ Suspicious or urgency-inducing keywords detected (e.g., kyc, urgent, bank, free).")
     if feat['has_at_symbol'] == 1:
-        reasons.append("⚠️ Link mein '@' symbol chhupa hai jo user ko fake site par bhejta hai.")
+        reasons.append("⚠️ Contains '@' symbol used to redirect users to malicious sites.")
     if not reasons:
-        reasons.append("✅ Link ka structure clean aur safe lag raha hai.")
+        reasons.append("✅ URL structure and security indicators appear clean and safe.")
     return reasons
 
-# --- WEBSITE DESIGN (UI) ---
 st.set_page_config(page_title="AI Phishing Detector", page_icon="🛡️")
 st.title("🛡️ AI Phishing & Scam Link Detector")
-st.write("Apne WhatsApp, SMS, ya Email par aaya koi bhi link neeche paste karein aur check karein ki woh **Safe** hai ya **Fraud**.")
+st.write("Paste any URL from WhatsApp, SMS, or Email below to check in real time whether it is **Safe** or a **Phishing Scam**.")
 
-user_url = st.text_input("🔗 Yahan Link Paste Karein:", placeholder="https://example.com")
+user_url = st.text_input("🔗 Enter or Paste URL Here:", placeholder="https://example.com")
 
 if st.button("🔍 Check Link Now"):
-    if user_url:
-        feat = extract_url_features(user_url)
+    clean_url = user_url.strip()
+    if clean_url:
+        feat = extract_url_features(clean_url)
         df = pd.DataFrame([feat])
-        pred = model.predict(df)[0]
-        risk = model.predict_proba(df)[0][1] * 100
+        risk = model.predict_proba(df) * 100
         
-        st.subheader("📊 Result:")
-        if pred == 1:
-            st.error(f"🔴 DANGER: Yeh ek Phishing / Scam Link ho sakta hai! (Risk Score: {risk:.1f}%)")
+        st.subheader("📊 Analysis Result:")
+        if risk >= 65.0:
+            st.error(f"🔴 DANGER: High probability of a Phishing / Scam Link! (Risk Score: {risk:.1f}%)")
         else:
-            st.success(f"🟢 SAFE: Yeh link surakshit lag raha hai! (Risk Score: {risk:.1f}%)")
+            st.success(f"🟢 SAFE: This link appears legitimate and safe. (Risk Score: {risk:.1f}%)")
             
-        st.subheader("🧠 AI Explanation (Kyun?):")
+        st.subheader("🧠 AI Explanation:")
         for r in explain_reason(feat):
             st.write(r)
     else:
-        st.warning("Kripya pehle koi link paste karein!")
+        st.warning("Please enter a URL first!")
