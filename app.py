@@ -45,7 +45,7 @@ if st.button("🔍 Check Link Now"):
     if clean_url:
         feat = extract_url_features(clean_url)
         df = pd.DataFrame([feat])
-        risk = model.predict_proba(df) * 100
+        risk = float(model.predict_proba(df)[0][1]) * 100
         
         st.subheader("📊 Analysis Result:")
         if risk >= 65.0:
