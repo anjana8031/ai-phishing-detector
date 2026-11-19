@@ -3,7 +3,7 @@
 An end-to-end Machine Learning web application that analyzes URLs in real time to detect phishing/scam links and explains security risk indicators.
 
 ### 🚀 Live Demo
-👉 **[Click here to try the Live Web App](https://ai-phishing-detector-9zmeezdswhkrebnvxamjrh.streamlit.app/)**
+👉 **[Click here to try the Live Web App](https://verisafe-ai.streamlit.app/)**
 
 ### 🛠️ Tech Stack
 - **Language:** Python
